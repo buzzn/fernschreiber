@@ -1,0 +1,12 @@
+[global]
+address = "0.0.0.0"
+smtp_host = "helios"
+smtp_user = "nikolai@tesla-energy.org"
+smtp_password = "password123"
+smtp_server = "localhost"
+port = 7780
+crypto_directory = "fernschreiber_codes"
+
+[development]
+address = "localhost"
+port = 7780
