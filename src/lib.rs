@@ -334,13 +334,26 @@ pub mod mscons {
         }
         let edifact = &payload[front_count..back_count];
 
-        let result = match std::str::from_utf8(&edifact[0..3]) {
+        let mut unb_front = 0;
+        for i in 0..edifact.len()-3 {
+            if edifact[i] == 'U' as u8 &&
+                edifact[i+1] == 'N' as u8 &&
+                edifact[i+2] == 'B' as u8
+            {
+                unb_front = i;
+                break;
+            }
+        }
+        // the parser will fail if UNB is not present
+        let unb_header = &edifact[unb_front..];
+
+        let result = match std::str::from_utf8(&unb_header[0..3]) {
             Ok(v) => {
                 match v {
                     HEADER_SEGMENT_BEGIN => {
-                        match edifact[3] as char {
+                        match unb_header[3] as char {
                             '+' => {
-                                match std::str::from_utf8(&edifact[4..8]) {
+                                match std::str::from_utf8(&unb_header[4..8]) {
                                     Ok(v) => {
                                         match v {
                                           // TODO trap all invalid characters here
@@ -442,7 +455,7 @@ pub mod mscons {
         let elements : Vec<&str> = segment.split(DATA_ELEMENT_SEPARATOR).collect();
 
 
-        if elements.len() != 8 {
+        if elements.len() < 6 {
             return Err("invalid UNB".to_string());
         }
 
@@ -516,6 +529,17 @@ pub mod mscons {
         f.read_to_end(&mut contents).expect("something went wrong reading the file");
         let segments = parse_into_segments(contents.as_slice()).unwrap();
         assert_eq!(segments.len(), 1558);
+        let result = parse_message(segments);
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn parses_segments_ok_with_UNA() {
+        let with_una_str = "UNA:+.? 'UNB+UNOC:3+9910960000001:500+9907399000009:500+180824:1137+0JL7SYX58I0118'UNH+0JL7SYX58M0376+CONTRL:D:3:UN:2.0'";
+
+        let contents = with_una_str.to_owned().into_bytes();
+        let segments = parse_into_segments(contents.as_slice()).unwrap();
+        assert_eq!(segments.len(), 3);
         let result = parse_message(segments);
         assert!(result.is_ok());
     }
