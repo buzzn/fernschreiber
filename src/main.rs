@@ -117,7 +117,7 @@ form {{
   <form method=\"post\" enctype=\"multipart/form-data\">
     <h2>Message</h2>
     <textarea name=\"message\" cols=\"50\" rows=\"7\">
-Dies Mail beinhaltet eine EDIFACT-Nachricht im Anhang.
+Diese Mail beinhaltet eine EDIFACT-Nachricht im Anhang.
     </textarea>
     <h2>Payload</h2>
     <input name=\"payload\" type=\"file\" accept=\"text/*\">
