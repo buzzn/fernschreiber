@@ -1,0 +1,10 @@
+[Unit]
+Description=EDIFACT Fernschreiber
+After=network.target
+[Service]
+Environment="ROCKET_ENV=production"
+Type=simple
+ExecStart=/home/fernmelder/fernschreiber/target/release/fernschreiber
+WorkingDirectory=/home/fernmelder/fernschreiber_workdir
+User=fernmelder
+Restart=on-abort
