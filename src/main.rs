@@ -47,24 +47,20 @@ impl FromData for UploadMultipart {
         let mut d = Vec::new();
         data.stream_to(&mut d).expect("Unable to read");
 
+
         let mut mp = Multipart::with_body(Cursor::new(d), boundary);
 
         let mut message = None;
         let mut payload = None;
         let mut payload_filename = None;
 
-        // FIXME
-        let mut buffer = vec![0; 10*1024*1024];
-
         mp.foreach_entry(|mut entry| {
             match entry.headers.name.as_str() {
                 "message" => {
-                    match entry.data.read(&mut buffer) {
-                        Ok(size) => {
-                            let mut d = Vec::new();
-                            d.resize(size, 0);
-                            d.copy_from_slice(&buffer[0..size]);
-                            let message_str = String::from_utf8(d).expect("message is not a string");
+                    let mut buffer = Vec::new();
+                    match entry.data.read_to_end(&mut buffer) {
+                        Ok(_size) => {
+                            let message_str = String::from_utf8(buffer).expect("message is not a string");
                             message = Some(message_str);
                         },
                         Err(_e) => {
@@ -73,12 +69,10 @@ impl FromData for UploadMultipart {
                     };
                 },
                 "payload" => {
-                    match entry.data.read(&mut buffer) {
-                        Ok(size) => {
-                            let mut d = Vec::new();
-                            d.resize(size, 0);
-                            d.copy_from_slice(&buffer[0..size]);
-                            payload = Some(d);
+                    let mut buffer = Vec::new();
+                    match entry.data.read_to_end(&mut buffer) {
+                        Ok(_size) => {
+                            payload = Some(buffer);
                             payload_filename = entry.headers.filename;
                         },
                         Err(_e) => {
