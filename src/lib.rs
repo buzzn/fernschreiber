@@ -39,9 +39,8 @@ pub mod edifact_mail {
     use self::lettre::{EmailAddress, Envelope, SendableEmail, Transport};
     use self::lettre::smtp::client::net::DEFAULT_TLS_PROTOCOLS;
 
-
     use self::lettre::smtp::SmtpClient;
-    //use self::lettre::stub::StubTransport;
+    use self::lettre::stub::StubTransport;
 
     use self::lettre::smtp::ConnectionReuseParameters;
     use self::tempfile::TempDir;
@@ -58,6 +57,7 @@ pub mod edifact_mail {
 
     #[derive(Debug)]
     pub struct SmtpSettings {
+        pub stub: bool,
         pub host: String,
         pub user: String,
         pub password: String,
@@ -103,15 +103,24 @@ pub mod edifact_mail {
             Ok(m) => m,
             Err(e) => return Err(format!("Could not create mail client. {:?}", e))
         };
-        let mut mailer = client
-            .credentials(Credentials::new(settings.user.clone(), settings.password.clone()))
-            .smtp_utf8(true).authentication_mechanism(Mechanism::Plain)
-            .connection_reuse(ConnectionReuseParameters::ReuseUnlimited).transport();
-        let result = mailer.send(semail.into());
-        if result.is_ok() {
-            Ok(())
+        if settings.stub == true {
+            let mut mailer = StubTransport::new_positive();
+            let result = mailer.send(semail.into());
+            if result.is_ok() {
+              Ok(())
+            } else {
+              Err(format!("Could not send email. {:?}", result))
+            }
         } else {
-            Err(format!("Could not send email. {:?}", result))
+            let mut mailer = client.credentials(Credentials::new(settings.user.clone(), settings.password.clone()))
+                .smtp_utf8(true).authentication_mechanism(Mechanism::Plain)
+                .connection_reuse(ConnectionReuseParameters::ReuseUnlimited).transport();
+            let result = mailer.send(semail.into());
+            if result.is_ok() {
+                Ok(())
+            } else {
+                Err(format!("Could not send email. {:?}", result))
+            }
         }
     }
 

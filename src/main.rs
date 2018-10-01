@@ -383,6 +383,10 @@ fn main() {
                 Ok(v) => v.to_string(),
                 Err(_) => "fernschreiber_codes".to_owned()
             };
+            let is_stub = match rocket.config().get_bool("stub") {
+                Ok(v) => v,
+                Err(_) => false,
+            };
 
             preflight_check(&crypto_directory);
 
@@ -392,6 +396,7 @@ fn main() {
                                                        user : smtp_user,
                                                        password : smtp_password,
                                                        host : smtp_host,
+                                                       stub : is_stub,
                                                    }
             }))
         }))
