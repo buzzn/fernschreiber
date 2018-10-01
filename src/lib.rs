@@ -64,7 +64,7 @@ pub mod edifact_mail {
         pub server: String,
     }
 
-    pub fn send_email(settings: &SmtpSettings, message: Vec<u8>, from_email: &str, to_email: &str, subject: &str) -> Result<(), std::string::String> {
+    pub fn send_email(settings: &SmtpSettings, message: Vec<u8>, from_email: &str, to_email: &str, bcc_email: &Option<String>, subject: &str) -> Result<(), std::string::String> {
         let now = Local::now();
         let message_id = Uuid::new_v4();
         let header_message_id = format!("Message-ID: <{}.fernschreiber@{}>\n", message_id, settings.host);
@@ -81,15 +81,20 @@ pub mod edifact_mail {
         whole_message.append(&mut header_date.into_bytes());
         whole_message.extend_from_slice(&message.as_slice());
 
+        let mut addressees = Vec::new();
+        addressees.push(EmailAddress::new(to_email.to_string()).unwrap());
+        if bcc_email.is_some() {
+            addressees.push(EmailAddress::new(bcc_email.as_ref().unwrap().to_string()).unwrap());
+        }
+
         let semail = SendableEmail::new(
           Envelope::new(
               Some(EmailAddress::new(from_email.to_string()).unwrap()),
-              vec![EmailAddress::new(to_email.to_string()).unwrap()],
+              addressees,
           ).unwrap(),
             message_id.to_string(),
             whole_message);
 
-        //let mut mailer = SmtpClient::new((settings.server.as_ref(), SMTP_PORT), ClientSecurity::None).unwrap()
         let mut tls_builder = TlsConnector::builder();
         tls_builder.min_protocol_version(Some(DEFAULT_TLS_PROTOCOLS[0]));
         tls_builder.danger_accept_invalid_certs(true);
