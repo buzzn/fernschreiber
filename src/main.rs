@@ -1,7 +1,6 @@
-#![feature(plugin)]
-#![plugin(rocket_codegen)]
+#![feature(proc_macro_hygiene, decl_macro)]
+#[macro_use] extern crate rocket;
 
-extern crate rocket;
 extern crate multipart;
 use std::collections::HashMap;
 use std::io::{Cursor, Read};
@@ -10,8 +9,9 @@ use std::str;
 
 use rocket::fairing::AdHoc;
 use rocket::response::content;
-use rocket::data::{self, FromData};
-use rocket::{Request, Data, Outcome, State, Error};
+use rocket::data::{self, FromDataSimple};
+use rocket::{Request, Data, Outcome, State};
+use rocket::http::Status;
 use multipart::server::{Multipart};
 use rocket::response::status::BadRequest;
 
@@ -36,7 +36,7 @@ struct UploadMultipart {
     payload: Vec<u8>
 }
 
-impl FromData for UploadMultipart {
+impl FromDataSimple for UploadMultipart {
     type Error = ();
 
     fn from_data(request: &Request, data: Data) -> data::Outcome<Self, Self::Error> {
@@ -127,7 +127,7 @@ Diese Mail beinhaltet eine EDIFACT-Nachricht im Anhang.
 }
 
 #[get("/info", format = "text/html")]
-fn info(config: State<FernschreiberConfig>) -> Result<content::Html<String>, Error> {
+fn info(config: State<FernschreiberConfig>) -> Result<content::Html<String>, Status> {
     let header = format!("
 <html>
 <title>{message} Info</title>
@@ -142,13 +142,13 @@ fn info(config: State<FernschreiberConfig>) -> Result<content::Html<String>, Err
     let fernschreiber_abs_path_str = match fernschreiber_path.canonicalize() {
         Ok(v) => v.to_str().unwrap().to_owned(),
         Err(_e) => {
-            return Err(Error::Internal);
+            return Err(Status::InternalServerError);
         }
     };
 
     let mut certdb : HashMap<std::string::String, RecipientCertificate> = HashMap::new();
     if !read_certificates(fernschreiber_path, &mut certdb) {
-        return Err(Error::Internal);
+        return Err(Status::InternalServerError);
     }
 
     let mut content = header;
@@ -380,7 +380,7 @@ fn main() {
 
     rocket::ignite()
         .mount("/", routes![index, info, transmit])
-        .attach(AdHoc::on_attach(|rocket| {
+        .attach(AdHoc::on_attach("Settings", |rocket| {
             let smtp_user = match rocket.config().get_str("smtp_user") {
                 Ok(v) => v.to_string(),
                 Err(_) => panic!("smtp_user not set")
