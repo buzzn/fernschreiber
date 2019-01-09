@@ -15,8 +15,8 @@ native-tls = { version = "^0.2" }
 
 [dependencies.lettre]
 git = "https://github.com/buzzn/lettre.git"
-rev = "6439b2636d72c2a747117d23a75dd685ad7d626f"
+rev = "acb4170a8887c552107d8c44f8fbfe743c175ba9"
 
 [dependencies.lettre_email]
 git = "https://github.com/buzzn/lettre.git"
-rev = "6439b2636d72c2a747117d23a75dd685ad7d626f"
+rev = "acb4170a8887c552107d8c44f8fbfe743c175ba9"
