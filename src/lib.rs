@@ -166,7 +166,7 @@ pub mod edifact_mail {
         let encrypted_path_str = encrypted_path.to_str().unwrap();
 
         let mut openssl_command = Command::new("openssl");
-        let encrypt_command = openssl_command.arg("cms").arg("-encrypt").arg("-in").arg(&file_path_str).arg("-recip").arg(recipient_cert_path).arg("-keyopt").arg("rsa_padding_mode:oaep").arg("-aes-192-cbc").arg("-out").arg(&encrypted_path_str);
+        let encrypt_command = openssl_command.arg("cms").arg("-encrypt").arg("-in").arg(&file_path_str).arg("-recip").arg(recipient_cert_path).arg("-keyopt").arg("rsa_padding_mode:oaep").arg("-keyopt").arg("rsa_oaep_md:sha256").arg("-aes-192-cbc").arg("-out").arg(&encrypted_path_str);
 
         match encrypt_command.status() {
             Ok(status) => {
@@ -217,7 +217,7 @@ pub mod edifact_mail {
         let signed_path_str = signed_path.to_str().unwrap();
 
         let mut openssl_command = Command::new("openssl");
-        let sign_command = openssl_command.arg("cms").arg("-sign").arg("-in").arg(&file_path_str).arg("-signer").arg(&public_key_file_path_str).arg("-inkey").arg(private_key_file_path_str).arg("-keyopt").arg("rsa_padding_mode:pss").arg("-out").arg(&signed_path_str);
+        let sign_command = openssl_command.arg("cms").arg("-sign").arg("-in").arg(&file_path_str).arg("-signer").arg(&public_key_file_path_str).arg("-inkey").arg(private_key_file_path_str).arg("-keyopt").arg("rsa_padding_mode:pss").arg("-md").arg("sha256").arg("-out").arg(&signed_path_str);
 
         match sign_command.status() {
             Ok(status) => {
