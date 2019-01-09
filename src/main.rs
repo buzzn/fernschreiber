@@ -271,12 +271,22 @@ fn transmit(config: State<FernschreiberConfig>, data: UploadMultipart) -> Result
         None => "Not defined. Please create / fill `priv/bcc`".to_owned()
     };
 
+    let debug_info1 = "<pre>";
+    let debug_info2 = "</pre>";
+
+    let debug_info = debug_info1.to_owned() + match &config.smtp_settings.stub {
+        true => "StubTransport used!",
+        false => ""
+    } + debug_info2;
+
+
     let response =
         format!("
 <html>
   <title>{message}</title>
   <body>
     <h1>{message}</h1>
+    {debug_information}
     <ol>
       <li>Sender: {sender}</li>
       <li>Recipient: {recipient}</li>
@@ -287,6 +297,7 @@ fn transmit(config: State<FernschreiberConfig>, data: UploadMultipart) -> Result
     <a href=\"/\">Back</a>
   </body>
 </html>",
+                debug_information=debug_info,
                 message=MESSAGE,
                 email=cert.email_recipient,
                 sender=mscons_message.unb.interchange_sender.sender_identification_code,
