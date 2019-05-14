@@ -202,6 +202,9 @@ fn transmit(config: State<FernschreiberConfig>, data: UploadMultipart) -> Result
     let fernschreiber_path = Path::new(&config.crypto_directory);
     let priv_dir_buf = fernschreiber_path.join("priv").to_owned();
     let from_email_file_path = priv_dir_buf.join("email");
+    // copy sends an unencrypted copy (for now) to another address
+    let copy_email_file_path = priv_dir_buf.join("copy");
+    // bcc for the encrypted copy
     let bcc_email_file_path  = priv_dir_buf.join("bcc");
     let mut certdb : HashMap<std::string::String, RecipientCertificate> = HashMap::new();
 
@@ -221,6 +224,11 @@ fn transmit(config: State<FernschreiberConfig>, data: UploadMultipart) -> Result
     };
 
     let bcc_mail = match read_cleaned(&bcc_email_file_path) {
+        Ok(v) => Some(v),
+        Err(_) => None,
+    };
+
+    let copy_mail = match read_cleaned(&copy_email_file_path) {
         Ok(v) => Some(v),
         Err(_) => None,
     };
@@ -266,10 +274,31 @@ fn transmit(config: State<FernschreiberConfig>, data: UploadMultipart) -> Result
         }
     };
 
-    let copy_recipient = match bcc_mail {
+    let copy_recipient = match copy_mail {
+        Some(ref v) => v.to_owned(),
+        None => "Not defined. Please create / fill `priv/priv`".to_owned()
+    };
+
+    let copy_response = match copy_mail {
+        Some(ref copy) => match edifact_mail::send_email(&config.smtp_settings,
+                                                     message,
+                                                     &from_email,
+                                                     &copy,
+                                                     &None,
+                                                     &data.payload_filename) {
+            Ok(_) => "OK".to_owned(),
+            Err(e) => {
+                e
+            }
+        }
+        None => "No copy recipient set.".to_owned()
+    };
+
+    let bcc_recipient = match bcc_mail {
         Some(v) => v.clone(),
         None => "Not defined. Please create / fill `priv/bcc`".to_owned()
     };
+
 
     let debug_info1 = "<pre>";
     let debug_info2 = "</pre>";
@@ -290,9 +319,11 @@ fn transmit(config: State<FernschreiberConfig>, data: UploadMultipart) -> Result
     <ol>
       <li>Sender: {sender}</li>
       <li>Recipient: {recipient}</li>
+      <li>BCC Recipient: {bcc_recipient}</li>
       <li>Copy Recipient: {copy_recipient}</li>
       <li>Selected Email: {email}</li>
       <li>Mail Response: {mail_response}</li>
+      <li>Copy Response: {copy_response}</li>
     </ol>
     <a href=\"/\">Back</a>
   </body>
@@ -301,9 +332,11 @@ fn transmit(config: State<FernschreiberConfig>, data: UploadMultipart) -> Result
                 message=MESSAGE,
                 email=cert.email_recipient,
                 sender=mscons_message.unb.interchange_sender.sender_identification_code,
+                bcc_recipient=bcc_recipient,
                 copy_recipient=copy_recipient,
                 recipient=mscons_message.unb.interchange_recipient.sender_identification_code,
-                mail_response=mail_response
+                mail_response=mail_response,
+                copy_response=copy_response
         );
 
     Ok(content::Html(response.to_string()))
