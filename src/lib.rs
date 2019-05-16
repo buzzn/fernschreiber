@@ -37,7 +37,7 @@ pub mod edifact_mail {
 
     use self::lettre::{ClientTlsParameters, ClientSecurity};
     use self::lettre::{EmailAddress, Envelope, SendableEmail, Transport};
-    use self::lettre::smtp::client::net::DEFAULT_TLS_PROTOCOLS;
+    use self::lettre::smtp::client::net::DEFAULT_TLS_MIN_PROTOCOL;
 
     use self::lettre::smtp::SmtpClient;
     use self::lettre::stub::StubTransport;
@@ -96,7 +96,7 @@ pub mod edifact_mail {
             whole_message);
 
         let mut tls_builder = TlsConnector::builder();
-        tls_builder.min_protocol_version(Some(DEFAULT_TLS_PROTOCOLS[0]));
+        tls_builder.min_protocol_version(Some(DEFAULT_TLS_MIN_PROTOCOL));
         tls_builder.danger_accept_invalid_certs(true);
         let tls_parameters = ClientTlsParameters::new(
             settings.server.clone(),
