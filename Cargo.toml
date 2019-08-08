@@ -1,10 +1,10 @@
 [package]
 name = "fernschreiber"
-version = "0.2.2"
+version = "0.2.3"
 authors = ["Maximilian Güntner <maximilian@buzzn.net>"]
 
 [dependencies]
-rocket = "0.4.0"
+rocket = "0.4"
 multipart = "0.15.2"
 encoding = "0.2.33"
 chrono = "0.4"
@@ -15,8 +15,8 @@ native-tls = { version = "^0.2" }
 
 [dependencies.lettre]
 git = "https://github.com/buzzn/lettre.git"
-rev = "16e06cc837ceb0bed54bf7dfd40d59aefc12ffbd"
+rev = "fc7edc97796f88990a2954d2f468715dbf46c9d9"
 
 [dependencies.lettre_email]
 git = "https://github.com/buzzn/lettre.git"
-rev = "16e06cc837ceb0bed54bf7dfd40d59aefc12ffbd"
+rev = "fc7edc97796f88990a2954d2f468715dbf46c9d9"
